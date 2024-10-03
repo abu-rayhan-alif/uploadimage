@@ -1,42 +1,19 @@
-#
-# from fastapi import FastAPI, UploadFile
-# import boto3
-#
-#
-# app = FastAPI()
-#
-# # Configure the  MinIO client
-# s3_client = boto3.client(
-#     's3',
-#     endpoint_url='http://localhost:9000',
-#     aws_access_key_id='2bBitdd9CyvAVprqIE3S',
-#     aws_secret_access_key='ArbdnbzHIeuo7OrR3Phni07NcUznLehj349Uxf03',
-# )
-#
-#
-#
-#
-# BUCKET_NAME = 'uploadimage'
-#
-# @app.post('/upload')
-# async def upload(file: UploadFile | None = None):
-#         s3_client.upload_fileobj(file.file, BUCKET_NAME, file.filename)
-#         return {"filename": file.filename, "message": "File uploaded successfully"}
+
+
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-
-from botocore.exceptions import NoCredentialsError, ClientError
-import logging
 import boto3
 
 app = FastAPI()
 
 # MinIO Configuration
 MINIO_URL = 'http://localhost:9000'  # MinIO server URL
-ACCESS_KEY = '2bBitdd9CyvAVprqIE3S'        # Replace with your MinIO access key
-SECRET_KEY = 'ArbdnbzHIeuo7OrR3Phni07NcUznLehj349Uxf03'        # Replace with your MinIO secret key
-BUCKET_NAME = 'uploadimage'           # Replace with your bucket name
+ACCESS_KEY = '2bBitdd9CyvAVprqIE3S'   # Replace with your MinIO access key
+SECRET_KEY = 'ArbdnbzHIeuo7OrR3Phni07NcUznLehj349Uxf03'  # Replace with your MinIO secret key
+BUCKET_NAME = 'uploadimage'  # Replace with your bucket name
 
 # Create MinIO S3 client
 s3_client = boto3.client('s3',
@@ -58,12 +35,16 @@ async def generate_presigned_url(request: PresignedURLRequest):
                     'Key': request.file_name,
                     'ContentType': request.file_type},
             ExpiresIn=60)  # URL valid for 60 seconds
-
         return {'url': response}
-    except NoCredentialsError:
-        raise HTTPException(status_code=403, detail='Credentials not available')
-    except ClientError as e:
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Mount static files to serve the HTML page
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_html():
+    with open("static/upload.html") as f:  # Ensure the HTML file is in the 'static' folder
+        return f.read()
 
 

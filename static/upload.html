@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload</title>
+</head>
+<body>
+    <h1>Upload Image</h1>
+    <input type="file" id="fileInput" />
+    <button id="uploadButton">Upload</button>
+
+    <script>
+        document.getElementById('uploadButton').onclick = async function() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            // Get presigned URL
+            const response = await fetch('/generate-presigned-url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    file_name: file.name,
+                    file_type: file.type
+                })
+            });
+
+            if (!response.ok) {
+                alert('Failed to get presigned URL.');
+                return;
+            }
+
+            const { url } = await response.json();
+
+            // Upload the file
+            const uploadResponse = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': file.type,
+                },
+                body: file
+            });
+
+            if (uploadResponse.ok) {
+                alert('File uploaded successfully!');
+            } else {
+                alert('Failed to upload file.');
+            }
+        };
+    </script>
+</body>
+</html>
