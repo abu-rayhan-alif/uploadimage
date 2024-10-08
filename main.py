@@ -203,10 +203,11 @@ s3_client = boto3.client('s3',
                          aws_access_key_id=ACCESS_KEY,
                          aws_secret_access_key=SECRET_KEY)
 
-
+MAX_FILE_SIZE = 1024 * 1024  # 1 MB
 class PresignedURLRequest(BaseModel):
     file_name: constr(max_length=255)
     file_type: str
+    file_size: MAX_FILE_SIZE
 
 
 import uuid
@@ -218,7 +219,9 @@ async def generate_presigned_url(request: PresignedURLRequest):
     """Generate a presigned URL for uploading a file to MinIO."""
 
     # Define the maximum file size in bytes
-    MAX_FILE_SIZE = 1024 * 1024  # 1 MB
+
+    if request.file_size > 1024 * 1024:  # Check if file size exceeds 1 MB
+         raise HTTPException(status_code=400, detail="File size must be 1 MB or less.")
 
     try:
         # Create a unique file name by appending a UUID to the original file name
