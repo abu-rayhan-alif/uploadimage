@@ -230,6 +230,7 @@ async def generate_presigned_url(request: PresignedURLRequest):
                                                         'Bucket': DEFAULT_BUCKET_NAME,
                                                         'Key': unique_file_name,
                                                         'ContentType': request.file_type,
+                                                        'ContentLength': MAX_FILE_SIZE
                                                     },
                                                     ExpiresIn=60,
                                                     HttpMethod='PUT'
@@ -238,7 +239,7 @@ async def generate_presigned_url(request: PresignedURLRequest):
         # Return the URL along with a warning about the file size limit
         return {
             'url': response,
-            'message': 'Please upload a file of size 1 MB or less. Any files larger than this will be rejected.',
+            'message': f'Please upload a file of size {MAX_FILE_SIZE / (1024 * 1024)} MB or less.',
             'unique_file_name': unique_file_name
         }
     except Exception as e:
